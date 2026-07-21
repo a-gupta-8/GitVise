@@ -36,22 +36,20 @@ export default function App() {
     const queryFunction = gitCommand[query[0]]
     if (!queryFunction) {
       setErrorMsg("Invalid command or not supported yet")
+      return
     }
     const queryStatus = queryFunction(query.slice(1), stage)
-    console.log("queries sent")
     if (queryStatus.valid) {
-      console.log("queries VALID")
       if (queryStatus["treePopulated"]) {
         setStage(true);
-        console.log("stage set")
       } else if (queryStatus["hashValue"]) {
         createNode(queryStatus.hashValue)
-        console.log("hash value returned")
       }
+      setErrorMsg("")
     } else {
-      console.log("queries INVALID")
       setErrorMsg(queryStatus["error"])
     }
+    return
   };
 
   function createNode(value) {
