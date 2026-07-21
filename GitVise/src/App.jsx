@@ -11,11 +11,17 @@ const initialEdges = [{ id: 'n1-n2', source: 'n1', target: 'n2' }];
 export default function App() {
 
   const [text, setText] = useState("");
+  const [errorMsg, setErrorMsg] = useState(" ");
 
   const checkEnterKey = (event) => {
     if (event.key === 'Enter') {
-      submitGitQuery(text);
-      event.preventDefault();
+      const textWords = text.split(' ')
+      if (textWords[0] !== "git") {
+        setErrorMsg("Invalid command")
+      } else {
+        submitGitQuery(text);
+        event.preventDefault();
+      }
     };
   };
 
@@ -65,6 +71,7 @@ export default function App() {
         }}>
         </input>
       </div>
+      <p>{errorMsg}</p>
       
       <ReactFlow
         nodes={nodes}
