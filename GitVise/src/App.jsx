@@ -6,11 +6,15 @@ const initialNodes = [
   { id: 'n1', position: { x: 0, y: 0 }, data: { label: 'Node 1' } },
   { id: 'n2', position: { x: 0, y: 100 }, data: { label: 'Node 2' } },
 ];
+
 const initialEdges = [{ id: 'n1-n2', source: 'n1', target: 'n2' }];
- 
+
 export default function App() {
 
   const [text, setText] = useState("");
+
+  const [nodes, setNodes] = useState(initialNodes);
+  const [edges, setEdges] = useState(initialEdges);
 
   const checkEnterKey = (event) => {
     if (event.key === 'Enter') {
@@ -19,12 +23,15 @@ export default function App() {
     };
   };
 
-  const submitGitQuery = (query) => {
-    console.log(query);
+  function submitGitQuery(query) {
+    let updateNodes = [...nodes];
+    updateNodes.push({ id: `n${updateNodes.length + 1}`, position: { x: 0, y: (updateNodes.length) * 100 }, data: { label: query }});
+    let updateEdges = [...edges];
+    updateEdges.push({ id: query, source: `n${updateEdges.length + 1}`, target: `n${updateEdges.length + 2}` });
+    setNodes(updateNodes);
+    setEdges(updateEdges);
+    setText("");
   };
-
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
  
   const onNodesChange = useCallback(
     (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
