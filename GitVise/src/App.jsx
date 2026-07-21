@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
- 
+import { gitCommand } from './components/gitCommands'; 
+
 const initialNodes = [
   { id: 'n1', position: { x: 0, y: 0 }, data: { label: 'Node 1' } },
   { id: 'n2', position: { x: 0, y: 100 }, data: { label: 'Node 2' } },
@@ -11,20 +12,55 @@ const initialEdges = [{ id: 'n1-n2', source: 'n1', target: 'n2' }];
 export default function App() {
 
   const [text, setText] = useState("");
-
-  const checkEnterKey = (event) => {
-    if (event.key === 'Enter') {
-      submitGitQuery(text);
-      event.preventDefault();
-    };
-  };
-
-  const submitGitQuery = (query) => {
-    console.log(query);
-  };
+  const [errorMsg, setErrorMsg] = useState(" ");
 
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
+
+  const [stage, setStage] = useState(false);
+
+  const checkEnterKey = (event) => {
+    if (event.key === 'Enter') {
+      const textWords = text.split(' ')
+      if (textWords[0] !== "git") {
+        setErrorMsg("Invalid command")
+      } else {
+        submitGitQuery(textWords.slice(1));
+        event.preventDefault();
+      }
+      setText("");
+    };
+  };
+
+  function submitGitQuery(query) {
+    const queryFunction = gitCommand[query[0]]
+    if (!queryFunction) {
+      setErrorMsg("Invalid command or not supported yet")
+      return
+    }
+    const queryStatus = queryFunction(query.slice(1), stage)
+    if (queryStatus.valid) {
+      if (queryStatus["treePopulated"]) {
+        setStage(true);
+      } else if (queryStatus["hashValue"]) {
+        createNode(queryStatus.hashValue)
+      }
+      setErrorMsg("")
+    } else {
+      setErrorMsg(queryStatus["error"])
+    }
+    return
+  };
+
+  function createNode(value) {
+    let updateNodes = [...nodes];
+    updateNodes.push({ id: `n${updateNodes.length + 1}`, position: { x: 0, y: (updateNodes.length) * 100 }, data: { label: value }});
+    let updateEdges = [...edges];
+    updateEdges.push({ id: value, source: `n${updateEdges.length + 1}`, target: `n${updateEdges.length + 2}` });
+    setNodes(updateNodes);
+    setEdges(updateEdges);
+  }
+  
  
   const onNodesChange = useCallback(
     (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
@@ -65,6 +101,7 @@ export default function App() {
         }}>
         </input>
       </div>
+      <p>{errorMsg}</p>
       
       <ReactFlow
         nodes={nodes}
